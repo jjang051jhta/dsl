@@ -7,6 +7,8 @@ import com.jjang051.entity.Team;
 import com.jjang051.repository.MemberRepository;
 import com.jjang051.repository.TeamRepository;
 import com.jjang051.service.MemberService;
+import com.querydsl.core.QueryResults;
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -91,6 +93,52 @@ public class MemberTest {
         for(int i=0;i<memberList.size();i++) {
             System.out.println(memberList.get(i).getUserName());
         }
+    }
+
+    @Test
+    public void paging() {
+        List<Member> memberList = queryFactory
+                .selectFrom(member)
+                .orderBy(member.userName.desc())
+                .offset(1)
+                .limit(2)  //2건만 조회  end
+                .fetch();
+        System.out.println(memberList.size());
+        Assertions.assertThat(memberList.size()).isEqualTo(2);
+    }
+
+    @Test
+    public void paging02() {
+        QueryResults<Member> memberList = queryFactory
+                .selectFrom(member)
+                .orderBy(member.userName.desc())
+                .offset(1)
+                .limit(2)  //2건만 조회  end
+                .fetchResults();
+        System.out.println(memberList.getTotal()); //전체 갯수 조회
+        System.out.println(memberList.getOffset());
+        System.out.println(memberList.getLimit());
+        System.out.println(memberList.getResults().size()); //결과 갯수 조회
+    }
+
+    @Test
+    public void 집합함수() {
+        List<Tuple> result =
+                queryFactory
+                .select(
+                    member.count(),
+                    member.age.sum(),
+                    member.age.avg(),
+                    member.age.max(),
+                    member.age.min()
+                )
+                .from(member).fetch();
+        Tuple tuple = result.get(0);
+        System.out.println(tuple.get(member.count()));
+        System.out.println(tuple.get(member.age.sum()));
+        System.out.println(tuple.get(member.age.avg()));
+        System.out.println(tuple.get(member.age.max()));
+        System.out.println(tuple.get(member.age.min()));
     }
 
 }
