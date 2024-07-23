@@ -9,6 +9,7 @@ import com.jjang051.repository.TeamRepository;
 import com.jjang051.service.MemberService;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 import static com.jjang051.entity.QMember.member;
+import static com.jjang051.entity.QTeam.team;
 
 @SpringBootTest
 //@Transactional
@@ -141,6 +143,67 @@ public class MemberTest {
         System.out.println(tuple.get(member.age.min()));
     }
 
+    @Test
+    public void group() {
+        List<Tuple> result = queryFactory
+                .select(team.name,member.age.avg())
+                .from(member)
+                .join(member.team, team)
+                .groupBy(team.name)
+                .fetch();
+
+        Tuple teamA = result.get(0);
+        System.out.println("====="+result.size());
+        System.out.println(teamA.get(team.name));
+        System.out.println(teamA.get(member.age.avg()));
+    }
+
+    @Test
+    public void join() {
+        // LAZY(가짜 proxy 샅애의 객체를 들고온다.)
+        // 만약 그 속성을 참조할때 그때 들고온다. 즉 그때  n+1
+        // 상태에서 연관관계에 있는 애들도 같이 들고 오기 ()
+        // fetch join을 하면 진짜를 들고 온다.
+        List<Member> result =
+                queryFactory.selectFrom(member)
+                .join(member.team, team).fetchJoin()
+                .where(team.name.eq("teamA"))
+                .fetch();
+        System.out.println(result.get(0).getUserName());
+        System.out.println(result.get(1).getUserName());
+        //jpa는 서브쿼리 없음
+    }
+
+    @Test
+    public void subQuery() {
+        QMember subMember = new QMember("subMember");
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .where(member.age.eq(
+                        JPAExpressions
+                                .select(subMember.age.max())
+                                .from(subMember)
+                ))
+                .fetch();
+        System.out.println(result.size());
+        //평균 나이이상 많은 멤버 찾기...
+    }
+
+    @Test
+    public void subQuery02() {
+        QMember subMember = new QMember("subMember");
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .where(member.age.goe(
+                        JPAExpressions
+                                .select(subMember.age.avg())
+                                .from(subMember)
+                ))
+                .fetch();
+        System.out.println(result.size());
+        //평균 나이이상 많은 멤버 찾기...
+        //from절에 subquery안됨 native로 짜서 쓴다.
+    }
 }
 
 
