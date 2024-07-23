@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragment/head :: head02('SIGNIN','alien02.png')}"></head>
+<header th:replace="~{fragment/header}"></header>
+
+<body>
+<div class="container">
+    <h1 class="mb-5 mt-5">LIST</h1>
+    <table class="table table-striped">
+        <colgroup>
+            <col style="width:80px">
+            <col>
+        </colgroup>
+        <tbody>
+<!--        <tr>-->
+<!--            <th>ID</th>-->
+<!--            <td th:text="${board.id}">1</td>-->
+<!--        </tr>-->
+        <tr>
+            <th>TITLE</th>
+            <td th:text="${board.title}">1</td>
+        </tr>
+        <tr>
+            <th>CONTENT</th>
+            <td th:text="${board.content}">1</td>
+        </tr>
+        </tbody>
+    </table>
+    <div class="mt-3 mb-3"
+         th:if="${
+                board.writer !=null &&
+                #authentication.principal.loggedMember.userId == board.writer.userId
+         }"
+    >
+        <a href="" th:href="@{|/board/modify/${board.id}|}" class="btn btn-primary">수정</a>
+        <button class="btn btn-danger" id="btn-delete"
+                th:data-url="@{|/board/delete/${board.id}|}">삭제</button>
+    </div>
+    <ul>
+        <li th:each="comment : ${board.comments}" class="mt-2">
+            <span th:text="${comment.content}"></span>
+            <span th:text="${comment.regDate}"></span>
+            <span th:text="${comment.writer.userName}"></span>
+            <button class="btn btn-danger btn-sm mx-2 btn-comment-delete"
+                th:if="${comment.writer.userId==
+                        #authentication.principal.loggedMember.userId}"
+                th:data-url="@{|/comment/delete/${comment.id}?boardId=${board.id}|}"
+            >DEL</button>
+        </li>
+    </ul>
+    <form class="mt-5" action="" method="post" th:method="post"
+          th:action="@{|/comment/insert/${board.id}|}">
+        <textarea class="form-control mb-3" rows="5" name="content"></textarea>
+        <button class="btn btn-primary">답변등록</button>
+    </form>
+
+    <div class="mt-5">
+        <a href="" th:href="@{/board/write}" class="btn btn-primary">WRITE</a>
+        <a href="" th:href="@{/board/list}" class="btn btn-primary">LIST</a>
+        <a href="" th:href="@{/board/delete/{id}(id=${board.id})}" class="btn btn-danger">DELETE-PATH</a>
+        <a href="" th:href="@{/board/delete-param(id=${board.id})}" class="btn btn-danger">DELETE-PARAM</a>
+    </div>
+</div>
+<script th:replace="~{fragment/footer}"></script>
+<script th:inline="javascript">
+
+    $("#btn-delete").on("click",function (){
+        if(confirm("삭제하시겠습니까?")){
+          //삭제하면 된다.
+          //location.href=[[|/board/delete/${board.id}|]];  //delete(board)
+          //location.href=$(this).data("url");
+            location.href=[[|/board/deleteid/${board.id}|]];
+        };
+    });
+    /*
+    $(".btn-comment-delete").on("click",function(){
+        if(confirm("삭제하시겠습니까?")){
+            //삭제하면 된다.
+            //location.href=[[|/board/delete/${board.id}|]];  //delete(board)
+            //location.href=$(this).data("url");
+            location.href=$(this).data("url");
+            ///comment/delete/200?boardId=100
+        };
+    })
+     */
+    $(".btn-comment-delete").on("click",function(){
+        const deleteURL = $(this).data("url");
+        const _parent = $(this).parent().remove();
+        console.log(deleteURL);
+        $.ajax({
+            method:"delete",
+            url:deleteURL,
+            success:function(res) {
+                console.log(res);
+                if(res.isDelete==="ok") {
+                    //location.reload();
+                    _parent.remove();
+
+                }
+            }
+        })
+        // if(confirm("삭제하시겠습니까?")){
+        //     $.ajax({
+        //         method:"delete",
+        //         url:deleteURL,
+        //         success:function(res) {
+        //             console.log(res);
+        //         }
+        //     })
+        // };
+    })
+</script>
+</body>
+</html>

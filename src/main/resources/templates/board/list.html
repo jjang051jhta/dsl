@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragment/head :: head02('SIGNIN','alien02.png')}"></head>
+<header th:replace="~{fragment/header}"></header>
+<body>
+<div class="container">
+    <h1 class="mb-5 mt-5">LIST</h1>
+<!--    <h1 class="mb-5 mt-5" th:text="${session.userName}">장성호</h1>-->
+    <table class="table table-striped">
+        <colgroup>
+            <col style="width:80px">
+            <col>
+        </colgroup>
+        <thead>
+            <tr>
+                <th scope="col">NO</th>
+                <th scope="col">TITLE</th>
+                <th scope="col">WRITER</th>
+                <th scope="col">DATE</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="boardItem : ${boardList}">
+                <th scope="row" th:text="${boardItemStat.count}">1</th>
+                <td>
+                    <a href="" th:href="@{/board/view/{id}(id=${boardItem.id})}"
+                       th:text="${boardItem.title}">
+                    </a>
+                    <span th:text="${boardItem.comments.size()}"></span>
+                </td>
+                <td th:text="${boardItem?.writer?.userName}"></td>
+                <td th:text="${#temporals.format(boardItem?.regDate,'YYYY-MM-dd HH:mm')}"></td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="mt-5"><a href="" th:href="@{/board/write}" class="btn btn-primary">WRITE</a></div>
+</div>
+<script th:replace="~{fragment/footer}"></script>
+</body>
+</html>
